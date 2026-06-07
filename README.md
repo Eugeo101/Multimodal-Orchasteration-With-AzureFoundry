@@ -45,18 +45,49 @@ Open `config.yaml` and fill in:
 
 Everything else is already populated from your existing config.
 
-## Usage
+## Usage Examples
 
 ```bash
-# Interactive REPL (creates new version + starts chat loop)
+# Interactive REPL — starts a multi-turn chat loop
 python main.py
+```
 
-# Single message
-python main.py "What is the capital of France?"
+### 1) 🖼️ Image Input
+```bash
+Analyze this image assets/sample.jpg
+```
 
-# Single message with file (image or audio)
-python main.py "Analyze this image" assets/photo.jpg
-python main.py "Transcribe this" assets/recording.wav
+### 2) 🎙️ Audio Input — Transcription
+```bash
+Transcribe this speech file assets/record_test.wav
+```
+
+### 3) 📄 RAG — Query your documents
+```bash
+What does the company policy say about remote work?
+```
+
+### 4) 🌐 Web Search — Live information retrieval
+```bash
+What are the latest news about Microsoft Build?
+# → Searches the web in real time and summarizes results
+```
+
+### 5) 🔤 NLP — Language & text analysis
+```bash
+What language is this? 'Bonjour tout le monde'
+```
+
+### 6) 🔊 Audio Output — Text-to-speech
+```bash
+Say: Hello world
+# → Generates and plays back spoken audio
+```
+
+### 7) 🎨 Image Output — Generation
+```bash
+Generate Image: a baby white bear
+# → Returns a generated image saved to outputs/
 ```
 
 ## What each tool does
