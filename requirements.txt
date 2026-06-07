@@ -1,8 +1,23 @@
+# Azure
 azure-ai-projects>=1.0.0
 azure-identity>=1.17.0
 azure-core>=1.30.0
-azure-storage-blob>=12.18.0
+azure-storage-blob>=12.19.0
+
+# OpenAI SDK (used by azure-ai-projects responses client)
+openai>=1.30.0
+
+# FastAPI + server
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9     # required for Form + File uploads in FastAPI
+
+# Config + utilities
 pyyaml>=6.0
 requests>=2.31.0
-simpleaudio==1.0.4
-pydub==0.25.1
+
+# Audio
+pydub>=0.25.1
+
+# Type hints (Python 3.11 built-in, but explicit for clarity)
+# No extra package needed

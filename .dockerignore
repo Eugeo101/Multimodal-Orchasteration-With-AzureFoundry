@@ -1,0 +1,2 @@
+# Keep config.yaml OUT of git but IN the Docker build
+!config.yaml

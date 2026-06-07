@@ -1,67 +1,72 @@
 """
 main.py
 ────────
-Entry point. Two modes:
+Entry point. Modes:
 
-  python main.py                          → interactive REPL
-  python main.py "your message here"      → single-turn, prints response
-  python main.py "analyze this" assets/photo.jpg  → single-turn with file
+  python main.py                           → interactive REPL (loads latest version)
+  python main.py --push                    → push new version THEN interactive REPL
+  python main.py "your message"            → single-turn (loads latest version)
+  python main.py --push "your message"     → push new version THEN single-turn
+  python main.py "analyze this" assets/photo.jpg → single-turn with file
 
-The Agent is always created fresh (new version pushed) on startup.
-To skip pushing a new version and reuse the latest, call agent.run_interactive()
-without calling agent.create_version() first — it will auto-create only if needed.
+RULE: Never push a new version automatically.
+      Always require --push flag to be explicit.
+      The deployed service (app.py) only loads, never pushes.
 """
 
-## Arguments Parsing
 import sys
 from pathlib import Path
 
-## Make project root importable regardless of where python is invoked from
 sys.path.insert(0, str(Path(__file__).parent))
 
-## Agent
 from agent.agent import Agent
 
+
 def main():
-    # ── Initialize agent (reads config.yaml) ─────────────────────────────────
+    # ── Parse --push flag ─────────────────────────────────────────────────────
+    args = sys.argv[1:]
+    push_new_version = "--push" in args
+    args = [a for a in args if a != "--push"]   # remove flag, keep rest
+
+    # ── Initialize agent ──────────────────────────────────────────────────────
     agent = Agent(config_path="config.yaml")
 
-    # ── Push a new version to Azure Foundry ──────────────────────────────────
-    agent.create_version()
+    if push_new_version:
+        agent.create_version()
+        print(f"✅ Pushed new version to Azure Foundry.\n")
+    else:
+        latest = agent.load_latest_version()
+        if latest is None:
+            print("⚠️  No existing version found. Use --push to create first version.")
+            sys.exit(1)
 
-    # ── Decide mode from CLI args ─────────────────────────────────────────────
-    args = sys.argv[1:]
-
+    # ── Decide mode ───────────────────────────────────────────────────────────
     if len(args) == 0:
-        # No args → interactive terminal REPL
         agent.run_interactive()
 
     elif len(args) == 1:
-        # One arg → single message, no file
         message = args[0]
         print(f"\nYou: {message}\n")
         response = agent.send(message=message)
         print(f"Agent: {response}\n")
 
     elif len(args) == 2:
-        # Two args → message + file path
         message = args[0]
         file_path = args[1]
-
         if not Path(file_path).exists():
             print(f"⚠️  File not found: {file_path}")
             sys.exit(1)
-
-        print(f"\nYou: {message}")
-        print(f"File: {file_path}\n")
+        print(f"\nYou: {message}\nFile: {file_path}\n")
         response = agent.send(message=message, file_path=file_path)
         print(f"Agent: {response}\n")
 
     else:
         print("Usage:")
-        print("  python main.py                              # interactive mode")
-        print('  python main.py "your message"               # single turn')
-        print('  python main.py "analyze this" assets/img.jpg  # with file')
+        print("  python main.py                               # interactive (latest version)")
+        print("  python main.py --push                        # push new version + interactive")
+        print('  python main.py "your message"                # single turn')
+        print('  python main.py --push "your message"         # push + single turn')
+        print('  python main.py "analyze this" assets/img.jpg # with file')
         sys.exit(1)
 
 
@@ -75,3 +80,7 @@ if __name__ == "__main__":
 # what language is this? 'Hello everyone this is english language" [NLP]
 # Say: Hello world [Audio Output]
 # Generate Image: a baby white bear [Image Output]
+
+# Test Server using POST request or Swagger
+# curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"message": "Hello!"}'
+# Swagger: http://localhost:8000/docs

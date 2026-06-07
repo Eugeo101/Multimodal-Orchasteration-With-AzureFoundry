@@ -463,3 +463,29 @@ class Agent:
             # ── Built-in tools ────────────────────────────────────────────
             WebSearchTool(),
         ]
+    
+    def load_latest_version(self) -> object | None:
+        """
+        Load the latest existing version of the agent from Azure Foundry.
+        Returns the agent version object, or None if no versions exist yet.
+
+        Used by app.py on startup so we don't push a new version every deploy.
+        To push a new version intentionally: python main.py --push
+        """
+        try:
+            versions = self.project_client.agents.list_versions(
+                agent_name=self.cfg["agent_name"]
+            )
+            version_list = list(versions)
+            if not version_list:
+                return None
+
+            # list_versions returns newest first
+            latest = version_list[0]
+            self.agent = latest
+            print(f"✅ Loaded agent: {latest.name} v{latest.version}")
+            return latest
+
+        except Exception as e:
+            print(f"⚠️  Could not load existing version: {e}")
+            return None
