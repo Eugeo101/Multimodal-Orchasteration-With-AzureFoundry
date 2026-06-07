@@ -1,0 +1,91 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Azure Foundry Agent — Project Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Foundry Project ───────────────────────────────────────────────────────────
+endpoint: ""
+api_key: ""
+
+# ── Agent Identity ────────────────────────────────────────────────────────────
+agent_name: "Basic-RAG-Agent"
+orchestrator_model: "gpt-4.1-mini"       # The LLM that orchestrates tool calls
+
+# ── Blob Storage (for Speech MCP audio I/O) ──────────────────────────────────
+blob_sas_url: ""
+
+# ── Foundry Resource (shared by Speech MCP + Language MCP) ───────────────────
+foundry_resource_name: ""
+# Constructed from resource name — used for Speech and Language MCP URLs:
+#   Speech  → https://{resource}.cognitiveservices.azure.com/speech/mcp?api-version=...
+#   Language→ https://{resource}.cognitiveservices.azure.com/language/mcp?api-version=...
+
+# ── Models ────────────────────────────────────────────────────────────────────
+models:
+  # Mistral Document AI — Image/document → structured markdown/text
+  # API: POST {endpoint}/v1/ocr  (passes image as base64 image_url or URL)
+  # Deployment must be active in your project. Set endpoint below after deploying.
+  image_to_text:
+    name: "mistral-document-ai-2512"
+    # After deploying in Foundry, your endpoint looks like:
+    #   https://<deployment-name>.<region>.models.ai.azure.com
+    # Leave as empty string — Agent.__init__ will raise a clear error if missing.
+    endpoint: "" # ← FILL IN: e.g. "https://mistral-doc-ai-xyz.eastus2.models.ai.azure.com"
+    api_key: "" # ← FILL IN: key from your Mistral deployment page
+
+  # FLUX-1.1-pro — Text → image generation
+  # API: POST {foundry_endpoint}/providers/blackforestlabs/v1/flux-pro-1.1?api-version=preview
+  # Uses the SAME Foundry project endpoint + api_key as the agent (no separate deploy key).
+  image_generation:
+    name: "FLUX-1.1-pro"
+    # deployment_name must be lowercase as required by Azure BFL endpoint routing
+    deployment_name: "flux-1.1-pro"      # ← exact deployment name you gave it in Foundry (lowercase)
+    # width/height must be multiples of 32, max 1440
+    width: 1024
+    height: 1024
+    steps: 28           # 1–50; higher = more detail but slower
+    guidance: 3.5       # prompt adherence strength
+
+  # Azure Speech — STT + TTS via MCP (no separate key; uses resource api_key)
+  speech:
+    # Speech MCP server URL — uses your resource name and preview api-version
+    server_url: ""
+    project_connection_id: ""
+    # Default STT settings (overridable at runtime via prompt)
+    stt_language: "en-US"
+    stt_format: ""  # Empty for Fast recognizer (format=detailed only works with Realtime)
+    stt_profanity: "masked"
+    stt_recognizer_type: "Fast"  # Fast = best for pre-recorded files; Realtime = strict (for live streams)
+    # Default TTS settings (overridable at runtime via prompt)
+    tts_voice: "en-US-JennyNeural"
+    tts_language: "en-US"
+    tts_format: "mp3"
+
+  # Azure Language — LanguageDetection + NER + Sentiment etc. via MCP
+  language:
+    server_url: ""
+    project_connection_id: ""
+    allowed_tools:
+      - "LanguageDetection"
+      - "NamedEntityRecognition"
+      - "SentimentAnalysis"
+      - "KeyPhraseExtraction"
+      - "Summarization"
+      - "PIIRedaction"
+
+# ── Existing tools from your config (preserved as-is) ────────────────────────
+existing_tools:
+  knowledge_base:
+    server_label: ""
+    server_url: ""
+    project_connection_id: ""
+    allowed_tool: "knowledge_base_retrieve"
+
+  memory_store:
+    name: ""
+    update_delay: 30
+
+# ── Output Directories ────────────────────────────────────────────────────────
+output:
+  base: "output"
+  audios: "output/Audios"
+  images: "output/Images"
